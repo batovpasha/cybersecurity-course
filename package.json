@@ -1,0 +1,26 @@
+{
+  "name": "cybersecurity-course",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/batovpasha/cybersecurity-course.git"
+  },
+  "keywords": [
+    "cybersecurity",
+    "cryptography"
+  ],
+  "author": "Pavlo Batov <batovpasha@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/batovpasha/cybersecurity-course/issues"
+  },
+  "homepage": "https://github.com/batovpasha/cybersecurity-course#readme",
+  "devDependencies": {
+    "@types/node": "^14.14.7"
+  }
+}
