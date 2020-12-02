@@ -1,19 +1,17 @@
 'use strict';
 
-const { readFile } = require('fs/promises');
-
-const TrigramScore = require('./TrigramScore');
+const TrigramScore    = require('./TrigramScore');
+const englishTrigrams = require('./englishTrigrams.json');
 
 const TRIGRAMS_FILE_PATH = './english_trigrams.txt';
+const CIPHERTEXT         = 'EFFPQLEKVTVPCPYFLMVHQLUEWCNVWFYGHYTCETHQEKLPVMSAKSPVPAPVYWMVHQLUSPQLYWLASLFVWPQLMVHQLUPLRPSQLULQESPBLWPCSVRVWFLHLWFLWPUEWFYOTCMQYSLWOYWYETHQEKLPVMSAKSPVPAPVYWHEPPLUWSGYULEMQTLPPLUGUYOLWDTVSQETHQEKLPVPVSMTLEUPQEPCYAMEWWYTYWDLUULTCYWPQLSEOLSVOHTLUYAPVWLYGDALSSVWDPQLNLCKCLRQEASPVILSLEUMQBQVMQCYAHUYKEKTCASLFPYFLMVHQLUPQLHULIVYASHEUEDUEHQBVTTPQLVWFLRYGMYVWMVFLWMLSPVTTBYUNESESADDLSPVYWCYAMEWPUCPYFVIVFLPQLOLSSEDLVWHEUPSKCPQLWAOKLUYGMQEUEMPLUSVWENLCEWFEHHTCGULXALWMCEWETCSVSPYLEMQYGPQLOMEWCYAGVWFEBECPYASLQVDQLUYUFLUGULXALWMCSPEPVSPVMSBVPQPQVSPCHLYGMVHQLUPQLWLRPOEDVMETBYUFBVTTPENLPYPQLWLRPTEKLWZYCKVPTCSTESQPQULLGYAUMEHVPETFWMEHVPETBZMEHVPETB';
 
-const CIPHERTEXT = 'EFFPQLEKVTVPCPYFLMVHQLUEWCNVWFYGHYTCETHQEKLPVMSAKSPVPAPVYWMVHQLUSPQLYWLASLFVWPQLMVHQLUPLRPSQLULQESPBLWPCSVRVWFLHLWFLWPUEWFYOTCMQYSLWOYWYETHQEKLPVMSAKSPVPAPVYWHEPPLUWSGYULEMQTLPPLUGUYOLWDTVSQETHQEKLPVPVSMTLEUPQEPCYAMEWWYTYWDLUULTCYWPQLSEOLSVOHTLUYAPVWLYGDALSSVWDPQLNLCKCLRQEASPVILSLEUMQBQVMQCYAHUYKEKTCASLFPYFLMVHQLUPQLHULIVYASHEUEDUEHQBVTTPQLVWFLRYGMYVWMVFLWMLSPVTTBYUNESESADDLSPVYWCYAMEWPUCPYFVIVFLPQLOLSSEDLVWHEUPSKCPQLWAOKLUYGMQEUEMPLUSVWENLCEWFEHHTCGULXALWMCEWETCSVSPYLEMQYGPQLOMEWCYAGVWFEBECPYASLQVDQLUYUFLUGULXALWMCSPEPVSPVMSBVPQPQVSPCHLYGMVHQLUPQLWLRPOEDVMETBYUFBVTTPENLPYPQLWLRPTEKLWZYCKVPTCSTESQPQULLGYAUMEHVPETFWMEHVPETBZMEHVPETB';
-const KEY        = 'ABCDEFGHIJKLMNOPQRSTUWVXYZ';
-
+let key            = 'ABCDEFGHIJKLMNOPQRSTUWVXYZ';
 const cryptedWords = CIPHERTEXT.split(' ');
+const cipher       = Array.from(new Set(CIPHERTEXT));
+const trigramScore = new TrigramScore(englishTrigrams);
 
-const cipher = Array.from(new Set(CIPHERTEXT));
-
-console.log({cipher});
+trigramScore.init();
 
 function shuffle(key) {
     const a  = Math.floor(Math.random() * key.length);
@@ -25,23 +23,83 @@ function shuffle(key) {
     aM[a] = bV;
     aM[b] = aV;
 
-    return aM.join();
+    return aM.join('');
+}
+
+function score(key) {
+    let points = 0;
+    const decr = cipher.reduce((obj, letter, i) => {
+        obj[letter] = key[i];
+
+        return obj;
+    }, {});
+
+    for (const word of cryptedWords) {
+        let decryptedWord = '';
+
+        for (const letter of word) {
+            decryptedWord += decr[letter] || '';
+        }
+
+        points += trigramScore.score(decryptedWord);
+    }
+
+    return points;
+}
+
+function decrypt(cipher, key, cryptedWords) {
+    const decr = cipher.reduce((obj, letter, i) => {
+        obj[letter] = key[i];
+
+        return obj;
+    }, {});
+
+    const decryptedWords = [];
+
+    for (const word of cryptedWords) {
+        let decryptedWord = '';
+
+        for (const letter of word) {
+            decryptedWord += decr[letter] || '';
+        }
+
+        decryptedWords.push(decryptedWord);
+    }
+
+    return decryptedWords.join(' ');
 }
 
 (async () => {
-    const trigramText = await readFile(TRIGRAMS_FILE_PATH, { encoding: 'utf-8' });
-    const trigramScore = new TrigramScore(trigramText);
-
-    trigramScore.init();
-
-    let points    = -1000000;
-    let maxPoints =  points;
-    let t         = 1.0;
-    let freezing  = 0.9997;
+    let points      = -1000000;
+    let maxPoints   =  points;
+    let temperature = 1.0;
+    let freezing    = 0.9997;
 
     while (true) {
-        let newKey = shuffle(KEY);
+        const newKey = shuffle(key);
+        const currPoints = score(newKey);
 
-        // TODO: implement core logic
+        if (currPoints > points) {
+            if (currPoints > maxPoints) {
+                maxPoints = currPoints;
+
+                console.log({
+                    temperature,
+                    currPoints,
+                    key     : newKey,
+                    decrypt : decrypt(cipher, newKey, cryptedWords)
+                });
+            }
+
+            key = newKey;
+            points = currPoints;
+        } else {
+            if (Math.random() < temperature) {
+                points = currPoints;
+                key = newKey;
+            }
+
+            temperature *= freezing;
+        }
     }
 })();

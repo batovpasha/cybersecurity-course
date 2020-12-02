@@ -1,19 +1,12 @@
+const { writeFile } = require('fs/promises');
+
 class TrigramScore {
-    constructor(trigramsText) {
-        this.trigramsText = trigramsText;
-        this.trigrams     = {};
+    constructor(trigrams) {
+        this.trigrams     = trigrams;
         this.lettersCount = 3;
     }
 
-    init() {
-        this.trigramsText
-            .split('\n')
-            .forEach(line => {
-                const [ key, count ] = line.split(' ');
-
-                this.trigrams[key] = parseInt(count);
-            });
-
+    async init() {
         this.totalNumber = Object.values(this.trigrams).reduce((a, b) => a + b, 0);
 
         Object
@@ -31,12 +24,10 @@ class TrigramScore {
         for (let i = 0; i < text.length - this.lettersCount + 1; i++) {
             const trigram = text.slice(i, i + this.lettersCount).toUpperCase();
 
-            if (this.trigrams.hasOwnProperty(trigram)) {
-                score += this.trigrams[trigram];
-            } else {
-                score += this.floor;
-            }
+            score += this.trigrams.hasOwnProperty(trigram) ? this.trigrams[trigram] : this.floor;
         }
+
+        return score;
     }
 }
 
