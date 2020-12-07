@@ -12,19 +12,61 @@ const CIPHER_TEXTS = [
     'ad924af7a9cdaf3a1bb0c3e71a27adf37fdf3a474dfef44914b17d8ea2cc86c89d4d72f9e93556a44d71dfb8980034b3cea5c4d4',
     'ab864af9a7d4e4790db797fb5b00afbd6fc5acaff9f3e95443b961dda6829680930874e6a42156bf1f25c6a4891c6d',
     'ad924ae0a3d1fb311facc3f5142eb5f366d93c0f01f2f04f0db22ec8b1cb8786925b37eaa82219b94a23ddf1931b34fa'
-];
+].map(x => Buffer.from(x, 'hex'));
 
 const TARGET_CIPHER_TEXT
-    = 'a59a0e6c462cf83113bd8bb31238e6be67c42bcded09ff4916f262c2e3c087c897085ae8a76019bc4671dabe8455';
+    = Buffer.from(
+        'a59a0e6c462cf83113bd8bb31238e6be67c42bcded09ff4916f262c2e3c087c897085ae8a76019bc4671dabe8455',
+    'hex'
+);
 
 const THRESHOLD = 2;
 
-function xorStrings(str1, str2) {
-    const maxIndex = str1.length < str2.length ? str1.length : str2.length;
+function xorBuffers(buff1, buff2) {
+    const maxIndex = buff1.length < buff2.length ? buff1.length : buff2.length;
 
     return Buffer.from(
         Array
             .from(new Array(maxIndex), (_, i) => i)
-            .reduce((acc, i) => acc + (str1[i] ^ str2[i]), '')
+            .reduce((acc, i) => {
+                acc.push(buff1[i] ^ buff2[i]);
+
+                return acc;
+            }, [])
     );
 }
+
+function main() {
+    const key = Array.from(new Array(1024), _ => 0);
+
+    for (const cipherText1 of CIPHER_TEXTS) {
+        const possibleZeros = Array.from(new Array(cipherText1.length), _ => 0);
+
+        for (const cipherText2 of CIPHER_TEXTS) {
+            if (cipherText1 !== cipherText2) {
+                const xored = xorBuffers(cipherText1, cipherText2);
+
+                for (let k = 0; k < xored.length; k++) {
+                    const xoredByte = xored[k];
+
+                    if (/[a-zA-Z]/.test(String.fromCharCode(xoredByte)) || xoredByte === 0) {
+                        possibleZeros[k]++;
+                    }
+                }
+            }
+        }
+
+        for (let i = 0; i < cipherText1.length; i++) {
+            if (possibleZeros[i] >= (CIPHER_TEXTS.length - THRESHOLD)) {
+                key[i] = cipherText1[i] ^ 0x20;
+            }
+        }
+    }
+
+    const keyBytes = Buffer.from(key);
+    const plainText = xorBuffers(keyBytes, TARGET_CIPHER_TEXT).toString();
+
+    console.log(plainText);
+}
+
+main();
