@@ -27,7 +27,7 @@ class Lcg {
                 this.state = mod((this.state * this.multiplier + this.increment), this.modulus);
 
                 return {
-                    value : this.state,
+                    value : Number(BigInt.asIntN(32, this.state)),
                     done  : false // infinity iterator
                 };
             }
