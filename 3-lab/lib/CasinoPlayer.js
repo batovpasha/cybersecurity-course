@@ -1,6 +1,7 @@
 class CasinoPlayer {
-    constructor(id) {
+    constructor(id, casinoApi) {
         this.id = id;
+        this.casinoApi = casinoApi;
     }
 }
 
