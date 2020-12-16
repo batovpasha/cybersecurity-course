@@ -71,30 +71,39 @@ class MersenneTwister {
         return new Uint32Array([x])[0];
     }
 
+    getNextValue() {
+        if (this.index === 0) {
+            for (let i = 0; i < MersenneTwister.N; i++) {
+                const x = MersenneTwister._int32(
+                    (this.state[i] & (1 << 31)) +
+                    (this.state[(i + 1) % MersenneTwister.N] & ((1 << 31) - 1))
+                );
+                this.state[i] =
+                    (this.state[(i + MersenneTwister.M) % MersenneTwister.N] ^ x >>> 1);
+                this.state[i] = MersenneTwister._int32(
+                    (x & 1)
+                        ? (this.state[i] ^ MersenneTwister.A)
+                        : this.state[i]
+                );
+            }
+        }
+
+        const value = MersenneTwister.temper(this.state[this.index]);
+        this.index = (this.index + 1) % MersenneTwister.N;
+
+        return value;
+    }
+
+    next() {
+        return {
+            value : this.getNextValue(),
+            done  : false
+        }
+    }
+
     [Symbol.iterator]() {
         return {
-            next : () => {
-                if (this.index === 0) {
-                    for (let i = 0; i < MersenneTwister.N; i++) {
-                        const x = MersenneTwister._int32(
-                            (this.state[i] & (1 << 31)) +
-                            (this.state[(i + 1) % MersenneTwister.N] & ((1 << 31) - 1))
-                        );
-                        this.state[i] =
-                            (this.state[(i + MersenneTwister.M) % MersenneTwister.N] ^ x >>> 1);
-                        this.state[i] = MersenneTwister._int32(
-                            (x & 1)
-                                ? (this.state[i] ^ MersenneTwister.A)
-                                : this.state[i]
-                        );
-                    }
-                }
-
-                const value = MersenneTwister.temper(this.state[this.index]);
-                this.index = (this.index + 1) % MersenneTwister.N;
-
-                return value;
-            }
+            next : this.next.bind(this)
         };
     }
 }
