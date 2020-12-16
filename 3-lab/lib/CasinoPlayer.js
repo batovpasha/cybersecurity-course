@@ -32,6 +32,7 @@ class CasinoPlayer {
             this.money += data.account.money;
 
             console.log({ data });
+            console.log(`Current amount of money: ${this.money}`);
 
             if (this.money >= this.earningsThreshold) {
                 console.log(`Successfully earned ${this.earningsThreshold} money`);
@@ -90,6 +91,7 @@ class CasinoPlayer {
                     this.money += data.account.money;
 
                     console.log({ data });
+                    console.log(`Current amount of money: ${this.money}`);
 
                     if (this.money >= this.earningsThreshold) {
                         console.log(`Successfully earned ${this.earningsThreshold} money`);
@@ -97,6 +99,35 @@ class CasinoPlayer {
                         break;
                     }
                 }
+            }
+        }
+    }
+
+    async crackBetterMt() {
+        const state = [];
+
+        for (let i = 0; i < MersenneTwister.N; i++) {
+            const betResult = await this.casinoApi.makeBetAndPlayBetterMt(this.id, 1, 0);
+
+            console.log({ state: betResult });
+
+            state.push(betResult.realNumber);
+        }
+
+        const mt = MersenneTwister.from(state);
+
+        for (const nextValue of mt) {
+            const data = await this.casinoApi.makeBetAndPlayBetterMt(this.id, 10, nextValue);
+
+            this.money += data.account.money;
+
+            console.log({ data });
+            console.log(`Current amount of money: ${this.money}`);
+
+            if (this.money >= this.earningsThreshold) {
+                console.log(`Successfully earned ${this.earningsThreshold} money`);
+
+                break;
             }
         }
     }
