@@ -1,5 +1,3 @@
-const { writeFile } = require('fs/promises');
-
 class TrigramScore {
     constructor(trigrams) {
         this.trigrams     = trigrams;

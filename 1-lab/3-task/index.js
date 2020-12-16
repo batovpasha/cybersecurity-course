@@ -69,7 +69,7 @@ function decrypt(cipher, key, cryptedWords) {
 }
 
 (async () => {
-    let points      = -1000000;
+    let points      = -Infinity;
     let maxPoints   =  points;
     let temperature = 1.0;
     let freezing    = 0.9997;
