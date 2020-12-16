@@ -1,5 +1,6 @@
-const { modinv } = require('./utils');
-const Lcg        = require('./prngs/Lcg');
+const { modinv, range } = require('./utils');
+const Lcg               = require('./prngs/Lcg');
+const MersenneTwister   = require('./prngs/MersenneTwister');
 
 class CasinoPlayer {
     constructor(id, casinoApi, earningsThreshold  = 1000000) {
@@ -69,6 +70,35 @@ class CasinoPlayer {
             increment,
             modulus
         };
+    }
+
+    async crackMt() {
+        const startTimestamp = Date.now();
+        const initState = await this.casinoApi.makeBetAndPlayMt(this.id, 10, 0);
+        const finishTimestamp = Date.now();
+
+        const timestampRange = range(startTimestamp / 1000, finishTimestamp / 1000);
+
+        for (const timestamp of timestampRange) {
+            const mt = new MersenneTwister(timestamp);
+            const generatedInitState = mt.next().value;
+
+            if (generatedInitState === initState.realNumber) {
+                for (const nextValue of mt) {
+                    const data = await this.casinoApi.makeBetAndPlayMt(this.id, 10, nextValue);
+
+                    this.money += data.account.money;
+
+                    console.log({ data });
+
+                    if (this.money >= this.earningsThreshold) {
+                        console.log(`Successfully earned ${this.earningsThreshold} money`);
+
+                        break;
+                    }
+                }
+            }
+        }
     }
 }
 
