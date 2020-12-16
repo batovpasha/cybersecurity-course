@@ -3,7 +3,8 @@
 // uuid v4 has ultra small collision probability
 const { v4: uuidv4 } = require('uuid');
 
-const casinoApi    = require('./lib/api');
+const config       = require('./config');
+const casinoApi    = require('./lib/api')(config.api.url);
 const CasinoPlayer = require('./lib/CasinoPlayer');
 
 async function crackCasinoRoyale() {
