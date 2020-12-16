@@ -5,7 +5,7 @@ class Lcg {
         this.state = BigInt(seed);
         this.multiplier = BigInt(multiplier);
         this.increment = BigInt(increment);
-        this.modulus = modulus;
+        this.modulus = BigInt(modulus);
     }
 
     static crackUnknownMultiplier(states, modulus) {
