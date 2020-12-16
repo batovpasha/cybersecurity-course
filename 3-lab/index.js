@@ -9,7 +9,9 @@ const CasinoPlayer = require('./lib/CasinoPlayer');
 
 async function crackCasinoRoyale() {
     const player = new CasinoPlayer(uuidv4(), casinoApi);
-    console.log(player);
+
+    await player.createAccount();
+    await player.crackLcg();
 }
 
 crackCasinoRoyale();
