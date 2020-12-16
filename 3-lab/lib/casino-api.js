@@ -9,8 +9,19 @@ const api = (url) => {
         return body;
     };
 
+    const makeBetAndPlay = mode => async (playerId, bet, number) => {
+        const route = `/play${mode}`;
+        const response = await fetch(`${url}${route}?id=${playerId}&bet=${bet}&number=${number}`);
+        const body = await response.json();
+
+        return body;
+    };
+
     return {
-        createAccount
+        createAccount,
+        makeBetAndPlayLcg      : makeBetAndPlay('Lcg'),
+        makeBetAndPlayMt       : makeBetAndPlay('Mt'),
+        makeBetAndPlayBetterMt : makeBetAndPlay('BetterMt')
     };
 };
 
